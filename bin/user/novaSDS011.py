@@ -55,7 +55,7 @@ class NovaSDS011Service(StdService):
         sds_dict = config_dict.get('NovaSDS011', {})
         self.port = sds_dict.get('port', '/dev/ttyUSB0')
         self.timeout = float(sds_dict.get('timeout', 3.0))
-        self.json_output = sds_dict.get('json_output', '/var/www/html/divumwx/jsondata/particles.txt')
+        self.json_output = sds_dict.get('json_output', '/var/www/html/weewx/jsondata/particles.txt')
         self.log_raw = to_bool(sds_dict.get('log_raw', False))
         
         # Cycle timing (configurable)
