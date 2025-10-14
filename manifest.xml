@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension>
+    <name>weewx-NovaSDS011</name>
+    <description>
+        WeeWX service for Nova SDS011 particulate sensor (PM2.5, PM10).
+        Implements query mode with 60s read/60s sleep cycles for extended sensor life.
+    </description>
+    <version>0.3.0</version>
+    <author>Ian Millard</author>
+    <license>GPLv3</license>
+    <config>
+        <engine>
+            <services>
+                <data_services>user.novaSDS011.NovaSDS011Service</data_services>
+            </services>
+        </engine>
+        <NovaSDS011>
+            <!-- Serial port configuration -->
+            <port>/dev/ttyUSB0</port>
+            <timeout>3.0</timeout>
+            
+            <!-- Read/Sleep cycle configuration -->
+            <read_period>60</read_period>      <!-- seconds to actively read samples -->
+            <sleep_period>60</sleep_period>    <!-- seconds to sleep (fan off) -->
+            <sample_interval>2</sample_interval> <!-- seconds between samples during read period -->
+            
+            <!-- JSON output configuration -->
+            <json_output>/var/www/html/divumwx/jsondata/particles.txt</json_output>
+            <file_owner>www-data</file_owner>  <!-- owner for JSON file -->
+            <file_group>www-data</file_group>  <!-- group for JSON file -->
+            
+            <!-- Logging -->
+            <log_raw>false</log_raw>           <!-- log each individual sample -->
+        </NovaSDS011>
+    </config>
+    <notes>
+        Install directly from GitHub: 
+        weectl extension install https://github.com/Millardiang/weewx-NovaSDS011/archive/refs/heads/main.zip
+        
+        Features:
+        - Query mode operation for reduced sensor wear
+        - 60s reading period / 60s sleep period (configurable)
+        - Automatic fan shutdown during sleep to extend sensor life
+        - Atomic JSON file writes with proper www-data ownership
+        - Thread-safe operation with WeeWX loop packets
+        - Multiple samples collected per cycle, last valid sample used
+        
+        Configuration Notes:
+        - read_period: Duration (seconds) to actively sample the sensor
+        - sleep_period: Duration (seconds) sensor sleeps with fan off
+        - sample_interval: Time (seconds) between individual samples during read period
+        - The service must run as root to change file ownership to www-data
+        - JSON file contains: {"dateTime": timestamp, "pm2_5": value, "pm10_0": value}
+    </notes>
+</extension>
