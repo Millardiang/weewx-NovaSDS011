@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 # --- Version ---
 DRIVER_NAME = "NovaSDS011"
-DRIVER_VERSION = "0.3.0"   # bump this when you make changes
+DRIVER_VERSION = "0.3.1"   # bump this when you make changes
 
 # SDS011 commands
 CMD_MODE = 2
@@ -99,8 +99,8 @@ class NovaSDS011Service(StdService):
             self.ser = None
             return
         
-        # Initialize sensor to query mode
-        self.cmd_set_mode(MODE_QUERY)
+        # Initialize sensor to query mode with retry logic
+        self.initialize_sensor()
         
         # Start background thread for read/sleep cycle
         self.running = True
@@ -110,6 +110,34 @@ class NovaSDS011Service(StdService):
         
         # Bind to loop packet events
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+    
+    def initialize_sensor(self):
+        """Initialize sensor with retry logic."""
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                log.info("Initializing sensor (attempt %d/%d)...", attempt + 1, max_retries)
+                
+                # Wake the sensor first
+                self.cmd_set_sleep(0)
+                time.sleep(2)  # Give sensor time to stabilize
+                
+                # Flush any stale data
+                self.ser.flushInput()
+                
+                # Set to query mode
+                self.cmd_set_mode(MODE_QUERY)
+                
+                log.info("Sensor initialized successfully")
+                return
+                
+            except Exception as e:
+                log.warning("Sensor initialization attempt %d failed: %s", attempt + 1, e)
+                if attempt < max_retries - 1:
+                    time.sleep(3)
+                else:
+                    log.error("Failed to initialize sensor after %d attempts", max_retries)
+                    log.error("Sensor will be initialized in background thread")
     
     def cmd_set_mode(self, mode):
         """Set sensor to active or query mode."""
@@ -139,17 +167,39 @@ class NovaSDS011Service(StdService):
     def read_response(self):
         """Read one response packet from sensor."""
         byte = b''
-        while byte != b'\xaa':
+        retries = 0
+        max_retries = 10  # Try reading header byte multiple times
+        
+        while byte != b'\xaa' and retries < max_retries:
             byte = self.ser.read(size=1)
             if not byte:
-                raise TimeoutError("No response from sensor")
+                retries += 1
+                time.sleep(0.1)
+        
+        if byte != b'\xaa':
+            raise TimeoutError("No response from sensor")
+            
         d = self.ser.read(size=9)
+        if len(d) != 9:
+            raise TimeoutError(f"Incomplete response: expected 9 bytes, got {len(d)}")
+            
         return byte + d
     
     def sensor_loop(self):
         """Background thread: 60s read cycle, 60s sleep cycle."""
         if not self.ser:
             return
+        
+        # Try to initialize sensor if not done during startup
+        try:
+            log.info("Background thread: attempting sensor initialization")
+            self.cmd_set_sleep(0)
+            time.sleep(2)
+            self.ser.flushInput()
+            self.cmd_set_mode(MODE_QUERY)
+            log.info("Background thread: sensor initialized")
+        except Exception as e:
+            log.warning("Background thread: initialization failed, will retry in loop: %s", e)
         
         while self.running:
             try:
