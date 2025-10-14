@@ -75,7 +75,7 @@ After installation, the following stanza is added to `weewx.conf`:
 | `read_period`     | `60`                                          | Duration (seconds) to actively sample sensor |
 | `sleep_period`    | `60`                                          | Duration (seconds) sensor sleeps with fan off |
 | `sample_interval` | `2`                                           | Seconds between samples during read period |
-| `json_output`     | `/var/www/html/divumwx/jsondata/particles.txt` | Path to write JSON |
+| `json_output`     | `/var/www/html/weewx/jsondata/particles.txt`  | Path to write JSON |
 | `file_owner`      | `www-data`                                    | User ownership for JSON file |
 | `file_group`      | `www-data`                                    | Group ownership for JSON file |
 | `log_raw`         | `false`                                       | Log each individual sample to debug log |
@@ -156,8 +156,8 @@ Realtime `particles.txt` example:
 ### Permission Errors
 If you see "Forbidden" errors accessing the JSON file:
 - Ensure WeeWX is running as root (required for `chown` operations)
-- Check directory permissions: `ls -la /var/www/html/divumwx/jsondata/`
-- Manually fix if needed: `sudo chown -R www-data:www-data /var/www/html/divumwx/jsondata/`
+- Check directory permissions: `ls -la /var/www/html/weewx/jsondata/`
+- Manually fix if needed: `sudo chown -R www-data:www-data /var/www/html/weewx/jsondata/`
 
 ### Serial Port Access
 If the sensor can't be opened:
