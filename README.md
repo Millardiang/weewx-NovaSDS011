@@ -63,7 +63,7 @@ After installation, the following stanza is added to `weewx.conf`:
     file_group = www-data     # group for JSON file
     
     # Logging
-    log_raw = false           # log each individual sample
+    log_raw = True           # log each individual sample
 ```
 
 ### Options
