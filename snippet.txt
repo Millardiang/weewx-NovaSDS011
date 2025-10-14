@@ -1,0 +1,22 @@
+[Engine]
+    
+    # This section specifies which services should be run and in what order.
+    [[Services]]
+        prep_services = weewx.engine.StdTimeSynch
+        data_services = user.novaSDS011.NovaSDS011Service
+        process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.wxservices.StdWXCalculate
+        xtype_services = weewx.wxxtypes.StdWXXTypes, weewx.wxxtypes.StdPressureCooker, weewx.wxxtypes.StdRainRater, weewx.wxxtypes.StdDelta
+        archive_services = weewx.engine.StdArchive
+        restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW, weewx.restx.StdAWEKAS
+        report_services = weewx.engine.StdPrint, weewx.engine.StdReport
+
+[NovaSDS011]
+       port = /dev/ttyUSB0
+       timeout = 3.0
+       json_output = /var/www/html/divumwx/jsondata/particles.txt   #set your own path here
+       log_raw = True
+       read_period = 60      # seconds to actively read
+       sleep_period = 60     # seconds to sleep (fan off)
+       sample_interval = 2   # seconds between samples when reading
+       file_owner = www-data   # set ownership here
+       file_group = www-data   # set group here    
