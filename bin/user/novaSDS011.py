@@ -15,8 +15,6 @@ import logging
 import serial
 import os
 import tempfile
-import pwd
-import grp
 import weewx
 from weewx.engine import StdService
 from weeutil.weeutil import to_bool
@@ -25,7 +23,7 @@ log = logging.getLogger(__name__)
 
 # --- Version ---
 DRIVER_NAME = "NovaSDS011"
-DRIVER_VERSION = "0.3.1"   # bump this when you make changes
+DRIVER_VERSION = "0.4.0"   # bump this when you make changes
 
 # SDS011 commands
 CMD_MODE = 2
@@ -55,29 +53,13 @@ class NovaSDS011Service(StdService):
         sds_dict = config_dict.get('NovaSDS011', {})
         self.port = sds_dict.get('port', '/dev/ttyUSB0')
         self.timeout = float(sds_dict.get('timeout', 3.0))
-        self.json_output = sds_dict.get('json_output', '/var/www/html/weewx/jsondata/particles.txt')
+        self.json_output = sds_dict.get('json_output', '/var/www/html/divumwx/jsondata/particles.txt')
         self.log_raw = to_bool(sds_dict.get('log_raw', False))
         
         # Cycle timing (configurable)
         self.read_period = int(sds_dict.get('read_period', 60))    # seconds to read
         self.sleep_period = int(sds_dict.get('sleep_period', 60))  # seconds to sleep
         self.sample_interval = int(sds_dict.get('sample_interval', 2))  # seconds between samples
-        
-        # Get ownership settings from config (defaults to www-data:www-data)
-        self.file_owner = sds_dict.get('file_owner', 'www-data')
-        self.file_group = sds_dict.get('file_group', 'www-data')
-        
-        # Get UID/GID for www-data
-        try:
-            self.uid = pwd.getpwnam(self.file_owner).pw_uid
-            self.gid = grp.getgrnam(self.file_group).gr_gid
-            log.info("Will set ownership to %s:%s (%d:%d)", 
-                     self.file_owner, self.file_group, self.uid, self.gid)
-        except KeyError as e:
-            log.warning("Could not find user/group %s:%s, will skip ownership change: %s", 
-                       self.file_owner, self.file_group, e)
-            self.uid = None
-            self.gid = None
         
         # Latest readings cache
         self.latest_pm25 = None
@@ -257,7 +239,7 @@ class NovaSDS011Service(StdService):
                 event.packet['pm10_0'] = self.latest_pm10
     
     def write_json(self, ts, pm25, pm10):
-        """Write latest readings to particles.json (atomic update with proper ownership)."""
+        """Write latest readings to particles.json (atomic update)."""
         data = {
             "dateTime": ts,
             "pm2_5": pm25,
@@ -270,25 +252,13 @@ class NovaSDS011Service(StdService):
             # Ensure directory exists
             os.makedirs(dirpath, mode=0o755, exist_ok=True)
             
-            # Set directory ownership if we have UID/GID
-            if self.uid is not None and self.gid is not None:
-                try:
-                    os.chown(dirpath, self.uid, self.gid)
-                except PermissionError:
-                    log.warning("Cannot set directory ownership (need root privileges)")
-            
             # Write to temporary file
             with tempfile.NamedTemporaryFile('w', dir=dirpath, delete=False) as tmpfile:
                 json.dump(data, tmpfile)
                 tmpname = tmpfile.name
             
-            # Set file permissions and ownership before moving
+            # Set file permissions (ownership changes removed to suppress warnings)
             os.chmod(tmpname, 0o644)
-            if self.uid is not None and self.gid is not None:
-                try:
-                    os.chown(tmpname, self.uid, self.gid)
-                except PermissionError:
-                    log.warning("Cannot set file ownership (need root privileges)")
             
             # Atomic replace
             os.replace(tmpname, self.json_output)
