@@ -31,5 +31,5 @@ class NovaSDS011Installer(ExtensionInstaller):
                     'sleep_period' : '60',    # seconds to sleep (fan off)
                     'sample_interval' : '2',    # seconds between samples when reading
                     }},
-            files=[('bin/user', ['bin/user/novaSDS011.py']]
+            files=[('bin/user', ['bin/user/novaSDS011.py'])]
             )
