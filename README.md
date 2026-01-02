@@ -38,6 +38,34 @@ weewx-NovaSDS011/
 
 ---
 
+
+
+## 🛠️ Installation
+
+1. Activate your virtual environment (Only for users who installed WeeWX using PIP into a virtual environment):
+   ```bash
+   source ~/weewx-venv/bin/activate
+   ```
+
+2. Install via the WeeWX extension manager directly from GitHub:
+   ```bash
+   weectl extension install https://github.com/Millardiang/weewx-NovaSDS011/archive/refs/heads/main.zip
+   ```
+
+3. Verify the `[NovaSDS011]` stanza exists in `weewx.conf`.
+
+4. Restart WeeWX:
+   ```bash
+   sudo systemctl restart weewx
+   ```
+
+5. Verify operation in the logs:
+   ```bash
+   sudo journalctl -u weewx -f
+   ```
+   You should see messages about the sensor waking, reading, and sleeping.
+
+---
 ## ⚙️ Configuration
 
 After installation, the following stanza is added to `weewx.conf`:
@@ -82,39 +110,12 @@ After installation, the following stanza is added to `weewx.conf`:
 
 ---
 
-## 🛠️ Installation
-
-1. Activate your virtual environment:
-   ```bash
-   source ~/weewx-venv/bin/activate
-   ```
-
-2. Install via the WeeWX extension manager directly from GitHub:
-   ```bash
-   weectl extension install https://github.com/Millardiang/weewx-NovaSDS011/archive/refs/heads/main.zip
-   ```
-
-3. Verify the `[NovaSDS011]` stanza exists in `weewx.conf`.
-
-4. Restart WeeWX:
-   ```bash
-   sudo systemctl restart weewx
-   ```
-
-5. Verify operation in the logs:
-   ```bash
-   sudo journalctl -u weewx -f
-   ```
-   You should see messages about the sensor waking, reading, and sleeping.
-
----
-
 ## 📊 Output
 
 ### Database  
 Stored in default WeeWX schema fields:  
 - `pm2_5` — Particulate Matter 2.5 (µg/m³)
-- `pm10_0` — Particulate Matter 10 (µg/m³)
+- `pm10_0` — Particulate Matter 10.0 (µg/m³)
 
 ### JSON  
 Realtime `particles.txt` example:
